@@ -39,7 +39,8 @@ RUN     sudo pacman -Syu --noconfirm --noprogressbar \
 RUN     sudo usermod -aG docker user
 
 RUN     yay -Syu --noconfirm --noprogressbar --removemake \
-            julia-bin    
+            julia-bin
+
 
 WORKDIR /home/user
 
@@ -65,6 +66,12 @@ RUN     source .venv/bin/activate \
             jinja2 \
             seaborn matplotlib plotly bokeh altair ggplot \
             jupyter-repo2docker
+
+RUN     source .venv/bin/activate \
+    &&  echo 'using Pkg; Pkg.add("IJulia")' | julia
+
+RUN     sudo bash -c \
+            "source .venv/bin/activate && R -e \"install.packages('IRkernel', repos='https://cloud.r-project.org'); IRkernel::installspec(user=FALSE)\""
 
 ENTRYPOINT [ "/home/user/.venv/bin/jupyter", "lab", "--LabApp.token=''", "--allow-root", "--ip=0.0.0.0", "--port=8889"]
 
