@@ -38,7 +38,7 @@ RUN     sudo pacman -Syu --noconfirm --noprogressbar \
             docker
 RUN     sudo usermod -aG docker user
 
-RUN     yay -Syi --noconfirm --noprogressbar --removemake \
+RUN     yay -Syu --noconfirm --noprogressbar --removemake \
             julia-bin    
 
 WORKDIR /home/user
