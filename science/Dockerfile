@@ -52,10 +52,6 @@ RUN     uv python install --python-preference only-managed 3.13 \
     &&  uv pip install \
             jupyterlab notebook voila \
             ipykernel \
-    &&  python -m ipykernel install \
-            --user \
-            --name=science \
-            --display-name="Science" \
     &&  deactivate
 
 # python packages
