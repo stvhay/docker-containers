@@ -66,5 +66,5 @@ RUN     source .venv/bin/activate \
             seaborn matplotlib plotly bokeh altair ggplot \
             jupyter-repo2docker
 
-ENTRYPOINT [ "jupyter", "lab", "--LabApp.token=''", "--allow-root", "--ip=0.0.0.0", "--port=8889"]
+ENTRYPOINT [ "/home/user/.venv/bin/jupyter", "lab", "--LabApp.token=''", "--allow-root", "--ip=0.0.0.0", "--port=8889"]
 
