@@ -53,8 +53,8 @@ RUN     uv python install --python-preference only-managed 3.13 \
             ipykernel \
     &&  python -m ipykernel install \
             --user \
-            --name=vapoursynth \
-            --display-name="Vapoursynth" \
+            --name=science \
+            --display-name="Science" \
     &&  deactivate
 
 # python packages
