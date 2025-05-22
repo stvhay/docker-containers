@@ -30,7 +30,7 @@ RUN     git clone https://aur.archlinux.org/yay.git \
 RUN     sudo pacman -Syu --noconfirm --noprogressbar \
             less \
             nano nvim vim \
-            rust go \
+            rust go r gcc-fortran \
             cmake ninja \
             boost-libs \
             python-{uv,pip,distutils-extra,uv} ruff \
