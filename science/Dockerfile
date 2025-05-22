@@ -1,73 +1,84 @@
-FROM archlinux:base
+FROM nvidia/cuda:12.9.0-base-ubuntu24.04
 
-# Initialize keyring
-RUN     pacman-key --init
-RUN     pacman -Sy --noconfirm --noprogressbar \
-            archlinux-keyring \
-    &&  pacman -Su --noconfirm --noprogressbar
+# Set CUDA environment variables
+ENV PATH=/usr/local/cuda/bin:${PATH}
+ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:${LD_LIBRARY_PATH}
+ENV CUDA_HOME=/usr/local/cuda
+
+# remove annoying ubuntu branding
+RUN userdel ubuntu || true \
+    &&  useradd -m -s /bin/bash -u 1000 --groups sudo user
 
 # Base dev tools, add user, group sudo
-RUN     pacman -Syu --noconfirm --noprogressbar \
-            base-devel git \
-    &&  echo $DOCKER_GID \
-    &&  groupadd --system sudo \
-    &&  useradd -m --groups sudo user \
+RUN     apt-get update \
+    &&  apt-get upgrade -y
+
+RUN     apt install -y \
+            git build-essential sudo bash curl wget \
     &&  sed -i -e \
             "s/Defaults    requiretty.*/ #Defaults    requiretty/g" \
             /etc/sudoers \
-    &&  echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-
-USER user
-WORKDIR /tmp
-
-# Install AUR manager
-RUN     git clone https://aur.archlinux.org/yay.git \
-    &&  cd yay \
-    &&  makepkg --noconfirm --noprogressbar -si \
-    &&  yay --afterclean --removemake --save
+    &&  echo 'user ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # Installing packages
-RUN     sudo pacman -Syu --noconfirm --noprogressbar \
+RUN     apt-get install -y \
             less \
-            nano nvim vim \
-            rust go r gcc-fortran \
-            cmake ninja \
-            boost-libs \
-            python-{uv,pip,distutils-extra,uv} ruff \
+            nano vim neovim \
+            rustc cargo golang r-base gfortran \
+            cmake ninja-build \
+            libboost-all-dev \
+            python3 python3-pip python3-venv \
             ffmpeg sox \
-            docker
-RUN     sudo usermod -aG docker user
+            docker.io
+RUN     usermod -aG docker user
 
-RUN     yay -Syu --noconfirm --noprogressbar --removemake \
-            julia-bin
-
-
+USER user
 WORKDIR /home/user
 
+# Julia
+RUN     curl -fsSL https://install.julialang.org | sh -s -- -y
+ENV PATH="/home/user/.juliaup/bin:${PATH}"
+
 # initialize user venv and jupyter
-RUN     uv python install --python-preference only-managed 3.13 \
-    &&  uv venv --python 3.13 .venv \
-    &&  source .venv/bin/activate \
-    &&  uv pip install -U wheel setuptools pip \
-    &&  uv pip install \
+RUN     python3 -m venv .venv \
+    &&  .venv/bin/python -m pip install -U \
+            wheel setuptools pip \
+    &&  .venv/bin/python -m pip install \
             jupyterlab notebook voila \
-            ipykernel \
-    &&  deactivate
+            ipykernel
+
+# Julia jupyter kernel
+RUN     pwd && echo $PATH && id && ls -al \
+    &&  bash -c \
+            "source .venv/bin/activate && echo 'using Pkg; Pkg.add(\"IJulia\")' | julia"
+
+# R jupyter kernel
+RUN     sudo bash -c \
+            "source .venv/bin/activate && R -e \"install.packages('IRkernel', repos='https://cloud.r-project.org'); IRkernel::installspec(user=FALSE)\""
 
 # python packages
-RUN     source .venv/bin/activate \
-    &&  uv pip install \
+RUN     .venv/bin/python -m pip install \
             numpy scipy pandas matplotlib scikit-image \
             requests \
             jinja2 \
             seaborn matplotlib plotly bokeh altair ggplot \
             jupyter-repo2docker
 
-RUN     source .venv/bin/activate \
-    &&  echo 'using Pkg; Pkg.add("IJulia")' | julia
+# CUDA ML packages
+RUN     .venv/bin/python -m pip install \
+            tensorflow
 
-RUN     sudo bash -c \
-            "source .venv/bin/activate && R -e \"install.packages('IRkernel', repos='https://cloud.r-project.org'); IRkernel::installspec(user=FALSE)\""
+RUN     .venv/bin/python -m pip install \
+            torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 
-ENTRYPOINT [ "/home/user/.venv/bin/jupyter", "lab", "--LabApp.token=''", "--allow-root", "--ip=0.0.0.0", "--port=8889"]
+RUN     .venv/bin/python -m pip install \
+            jax[cuda12] -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html \
+            cupy-cuda12x \
+            xgboost lightgbm catboost \
+            transformers accelerate diffusers
 
+RUN     .venv/bin/python -m pip install \
+            scikit-learn-intelex plenoptic
+
+COPY ./run-jupyter.sh /
+ENTRYPOINT [ "/run-jupyter.sh" ]
