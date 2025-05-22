@@ -38,6 +38,9 @@ RUN     sudo pacman -Syu --noconfirm --noprogressbar \
             docker
 RUN     sudo usermod -aG docker user
 
+RUN     yay -Syi --noconfirm --noprogressbar --removemake \
+            julia-bin    
+
 WORKDIR /home/user
 
 # initialize user venv and jupyter
