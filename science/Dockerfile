@@ -33,6 +33,7 @@ RUN     apt-get install -y \
             cmake ninja-build \
             libboost-all-dev \
             python3 python3-pip python3-venv \
+            graphviz \
             ffmpeg sox \
             nest swig \
             docker.io
@@ -58,7 +59,13 @@ RUN     python3 -m venv .venv \
             wheel setuptools pip \
     &&  .venv/bin/python -m pip install \
             jupyterlab notebook voila \
-            ipykernel jupyterlab_widgets ipywidgets
+            ipykernel jupyterlab_widgets ipywidgets 
+
+# dot kernel
+RUN     .venv/bin/python -m pip install dot_kernel \
+    &&  . .venv/bin/activate \
+    &&  .venv/bin/install-dot-kernel \
+    &&  deactivate
 
 # Julia jupyter kernel
 RUN     pwd && echo $PATH && id && ls -al \
