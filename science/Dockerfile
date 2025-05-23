@@ -27,7 +27,7 @@ RUN     add-apt-repository ppa:nest-simulator/nest \
 
 # Installing packages
 RUN     apt-get install -y \
-            less \
+            less jq \
             nano vim neovim \
             rustc cargo golang r-base gfortran \
             cmake ninja-build \
@@ -37,6 +37,13 @@ RUN     apt-get install -y \
             nest swig \
             docker.io
 RUN     usermod -aG docker user
+
+# quarto
+RUN     wget -O /quarto.deb \
+            $(curl -s https://api.github.com/repos/quarto-dev/quarto-cli/releases/latest \
+        | jq -r '.assets[] | select(.name | endswith("linux-amd64.deb")) | .browser_download_url') \
+    &&  dpkg -i /quarto.deb \
+    &&  rm -f /quarto.deb
 
 USER user
 WORKDIR /home/user
