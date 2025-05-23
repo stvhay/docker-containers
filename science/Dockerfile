@@ -81,6 +81,7 @@ RUN     .venv/bin/python -m pip install \
             numpy scipy pandas matplotlib scikit-image \
             requests \
             jinja2 \
+            mermaid-python \
             seaborn matplotlib plotly bokeh altair ggplot \
             jupyter-repo2docker
 
