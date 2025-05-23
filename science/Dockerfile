@@ -6,7 +6,7 @@ ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:${LD_LIBRARY_PATH}
 ENV CUDA_HOME=/usr/local/cuda
 
 # remove annoying ubuntu branding
-RUN userdel ubuntu || true \
+RUN     userdel ubuntu || true \
     &&  useradd -m -s /bin/bash -u 1000 --groups sudo user
 
 # Base dev tools, add user, group sudo
@@ -14,11 +14,16 @@ RUN     apt-get update \
     &&  apt-get upgrade -y
 
 RUN     apt install -y \
-            git build-essential sudo bash curl wget \
+            git build-essential sudo \
+            software-properties-common \
+            bash curl wget \
     &&  sed -i -e \
             "s/Defaults    requiretty.*/ #Defaults    requiretty/g" \
             /etc/sudoers \
     &&  echo 'user ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+RUN     add-apt-repository ppa:nest-simulator/nest \
+    &&  apt-get update
 
 # Installing packages
 RUN     apt-get install -y \
@@ -29,6 +34,7 @@ RUN     apt-get install -y \
             libboost-all-dev \
             python3 python3-pip python3-venv \
             ffmpeg sox \
+            nest swig \
             docker.io
 RUN     usermod -aG docker user
 
@@ -45,7 +51,7 @@ RUN     python3 -m venv .venv \
             wheel setuptools pip \
     &&  .venv/bin/python -m pip install \
             jupyterlab notebook voila \
-            ipykernel
+            ipykernel jupyterlab_widgets ipywidgets
 
 # Julia jupyter kernel
 RUN     pwd && echo $PATH && id && ls -al \
@@ -74,11 +80,19 @@ RUN     .venv/bin/python -m pip install \
 RUN     .venv/bin/python -m pip install \
             jax[cuda12] -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html \
             cupy-cuda12x \
-            xgboost lightgbm catboost \
+            xgboost lightgbm catboost keras \
             transformers accelerate diffusers
 
 RUN     .venv/bin/python -m pip install \
-            scikit-learn-intelex plenoptic
+            h5py joblib \
+            scikit-learn-intelex \
+            plenoptic \
+            scikit-brain\
+            statsmodels \
+            nilearn mne \
+            nengo brian2 neuron PyNN csa \
+            odetoolbox pygsl antlr4-python3-runtime==4.10 \
+            networkx[default]
 
 COPY ./run-jupyter.sh /
 ENTRYPOINT [ "/run-jupyter.sh" ]
