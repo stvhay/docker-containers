@@ -53,13 +53,16 @@ WORKDIR /home/user
 RUN     curl -fsSL https://install.julialang.org | sh -s -- -y
 ENV PATH="/home/user/.juliaup/bin:${PATH}"
 
+RUN    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash \
+    && bash -c ". /home/user/.nvm/nvm.sh && nvm install 22"
+
 # initialize user venv and jupyter
 RUN     python3 -m venv .venv \
     &&  .venv/bin/python -m pip install -U \
             wheel setuptools pip \
     &&  .venv/bin/python -m pip install \
             jupyterlab notebook voila \
-            ipykernel jupyterlab_widgets ipywidgets 
+            ipykernel jupyterlab_widgets ipywidgets ipympl
 
 # dot kernel
 RUN     .venv/bin/python -m pip install dot_kernel \
