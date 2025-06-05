@@ -81,6 +81,7 @@ RUN     sudo bash -c \
 
 # python packages
 RUN     .venv/bin/python -m pip install \
+            ruff \
             numpy scipy pandas matplotlib scikit-image \
             requests \
             jinja2 \
