@@ -62,7 +62,8 @@ RUN     python3 -m venv .venv \
             wheel setuptools pip \
     &&  .venv/bin/python -m pip install \
             jupyterlab notebook voila \
-            ipykernel jupyterlab_widgets ipywidgets ipympl
+            ipykernel jupyterlab_widgets ipywidgets ipympl \
+            shiny ruff
 
 # dot kernel
 RUN     .venv/bin/python -m pip install dot_kernel \
